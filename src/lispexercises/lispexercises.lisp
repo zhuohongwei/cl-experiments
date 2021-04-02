@@ -447,3 +447,52 @@
     )
 
 ;; Problem 25 Password Strength Indicator
+(defun very-weak-p (password)
+    (and
+     (< (length password) 8)
+     (every #'digit-char-p password)))
+
+(defun weak-p (password)
+    (and
+     (< (length password) 8)
+     (every #'alpha-char-p password)))
+
+(defun strong-p (password)
+    (and (>= (length password) 8)
+         (every #'alphanumericp password)
+         (some #'alpha-char-p password)
+         (some #'digit-char-p password)))
+
+(defun very-strong-p (password)
+    (and (>= (length password) 8)
+         (some #'alpha-char-p password)
+         (some #'digit-char-p password)
+         (some #'(lambda (x) (not (alphanumericp x))) password)))
+
+(defun password-strength (password)
+    (cond 
+        ((very-strong-p password) 'very-strong)
+        ((strong-p password) 'strong)
+        ((weak-p password) 'weak)
+        ((very-weak-p password) 'very-weak)
+        (t 'weak)))
+
+(run-tests
+    (make-test "it should return false if more or equal to 8 characters" (not (very-weak-p "12345678")))
+    (make-test "it should return false if contains more than numbers" (not (very-weak-p "123456a")))
+    (make-test "it should return true if fewer than 8 characters and contains only numbers" (very-weak-p "1234567"))
+    
+    (make-test "it should return false if more or equal to 8 characters" (not (weak-p "12345678")))
+    (make-test "it should return false if contains more than letters" (not (weak-p "abcdef1")))
+    (make-test "it should return true if fewer than 8 characters and contains only letters" (weak-p "abcdefg"))
+
+    (make-test "it should return true if it contains letters and at least 1 digit and is at least 8 characters" (strong-p "abcdefg1"))
+    (make-test "it should return false if it contains letters and no digits and is at least 8 characters" (not (strong-p "abcdefgh")))
+    (make-test "it should return false if it contains no letter and all digits and is at least 8 characters" (not (strong-p "12345678")))
+    (make-test "it should return false if it contains letters and at least 1 digit and is less than 8 characters" (not (strong-p "bcdefg1")))
+
+    (make-test "it should return true if it contains letters and digits and special characters and is at least 8 characters" (very-strong-p "$bcdefg1"))
+    (make-test "it should return false if it contains no letter and all digits and special characters and is at least 8 characters" (not (very-strong-p "$@#!1234")))
+    (make-test "it should return false if it contains no digits and all letters and special characters and is at least 8 characters" (not (very-strong-p "$@#!abcd")))
+    (make-test "it should return false if it contains no special characters and all digits and letters and is at least 8 characters" (not (very-strong-p "1234abcd")))
+    (make-test "it should return false if it contains special characters and digits and letters and is less than 8 characters" (not (very-strong-p "$234abc"))))
