@@ -5,19 +5,27 @@
 
 (defmacro make-test (name predicate)
     `(lambda () 
-        (let ((p ,predicate))
-            (if p 
-                (format t "Test `~A` passed~%" ,name)
-                (format t "Test `~A` failed~%" ,name))
-        p)))
+        (values ,name ,predicate)))
+
+(defun report-test (name passp)
+    (format t "Test `~A` ~:[failed~;passed~]~%" name passp))
+
+(defun run-test (test)
+        (multiple-value-bind (name p) (funcall test) 
+            (apply #'report-test `(,name ,p)) p))
 
 (defun run-tests (&rest tests)
-       (let*  ((score (lambda (p) (if p 1 0)))
-                (run-test (lambda (test) (funcall test)))
-                (scores (map 'list score (map 'list run-test tests)))
-                (num-tests (length scores))
-                (num-passes (reduce #'+ scores)))
-            (format t "~A out of ~A tests passed~%" num-passes num-tests)))
+       (let  ((outcomes (map 'list #'run-test tests)))
+            (format t "~A out of ~A tests passed~%" (count t outcomes) (length outcomes))))
+
+;; (defmacro make-group (name &rest tests)
+;;     `(lambda ()
+;;         (format t "~A~%" ,name)
+;;         (run-tests ,@tests)))
+
+;; (defun run-groups (&rest groups)
+    
+;;     )
 
 (defun test-testlib ()
     (run-tests
