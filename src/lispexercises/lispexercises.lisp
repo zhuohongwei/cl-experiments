@@ -447,6 +447,7 @@
     )
 
 ;; Problem 25 Password Strength Indicator
+
 (defun very-weak-p (password)
     (and
      (< (length password) 8)
