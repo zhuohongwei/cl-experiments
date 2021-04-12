@@ -3,30 +3,40 @@
 
 (in-package #:testlib)
 
+(let ((indent 0)
+       (outcomes '()))
+    (defun indent+ ()
+        (incf indent))
+    (defun indent- ()
+        (decf indent))
+    (defun add-outcome (outcome)
+        (push outcome outcomes))
+    (defun reset-outcomes ()
+        (setq outcomes '()))
+    (defun report-outcomes ()
+        (format t "~A out of ~A tests passed~%" (count t outcomes) (length outcomes)))
+    (defmacro test (name predicate)
+        (let ((result (gensym)))
+            `(let ((,result ,predicate))
+                (add-outcome ,result)
+                (format t "~&~ATest `~A` ~:[failed~;passed~].~%" 
+                    (make-string ,indent :initial-element #\space) ,name ,result))))
+    (defmacro context (name &rest body)
+        `(progn 
+            (format t "~&~A~A~%" (make-string ,indent :initial-element #\space) ,name)
+            (indent+)
+            ,@body
+            (indent-) 
+            (if (zerop ,indent) 
+                (progn (report-outcomes)
+                         (reset-outcomes))))))
+
+(defmacro run-tests (&rest body)
+        `(context "" ,@body))
+
 (defmacro make-test (name predicate)
-    `(lambda () 
-        (values ,name ,predicate)))
-
-(defun report-test (name passp)
-    (format t "Test `~A` ~:[failed~;passed~]~%" name passp))
-
-(defun run-test (test)
-        (multiple-value-bind (name p) (funcall test) 
-            (apply #'report-test `(,name ,p)) p))
-
-(defun run-tests (&rest tests)
-       (let  ((outcomes (map 'list #'run-test tests)))
-            (format t "~A out of ~A tests passed~%" (count t outcomes) (length outcomes))))
-
-;; (defmacro make-group (name &rest tests)
-;;     `(lambda ()
-;;         (format t "~A~%" ,name)
-;;         (run-tests ,@tests)))
-
-;; (defun run-groups (&rest groups)
-    
-;;     )
-
+    `(test ,name ,predicate))
+  
 (defun test-testlib ()
     (run-tests
         (make-test "1 == 1" (= 1 1))
@@ -34,4 +44,4 @@
         (make-test "NIL" nil)
         (make-test "t" t)))
 
-;;(test-testlib)
+(test-testlib)
