@@ -1,3 +1,3 @@
 (defpackage #:testlib
     (:use #:cl)
-    (:export make-test run-tests test context))
+    (:export make-test run-tests run test context))

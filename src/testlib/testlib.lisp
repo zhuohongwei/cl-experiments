@@ -3,36 +3,37 @@
 
 (in-package #:testlib)
 
-(let ((indent 0)
-       (outcomes '()))
-    (defun indent+ ()
-        (incf indent))
-    (defun indent- ()
-        (decf indent))
-    (defun add-outcome (outcome)
-        (push outcome outcomes))
-    (defun reset-outcomes ()
-        (setq outcomes '()))
-    (defun report-outcomes ()
-        (format t "~A out of ~A tests passed~%" (count t outcomes) (length outcomes)))
-    (defmacro test (name predicate)
-        (let ((result (gensym)))
-            `(let ((,result ,predicate))
-                (add-outcome ,result)
-                (format t "~&~ATest `~A` ~:[failed~;passed~].~%" 
-                    (make-string ,indent :initial-element #\space) ,name ,result))))
-    (defmacro context (name &rest body)
-        `(progn 
-            (format t "~&~A~A~%" (make-string ,indent :initial-element #\space) ,name)
-            (indent+)
-            ,@body
-            (indent-) 
-            (if (zerop ,indent) 
-                (progn (report-outcomes)
-                         (reset-outcomes))))))
+(defvar *test-output-stream* t)
+
+(defun make-spaces (n)
+    (make-string n :initial-element #\space))
+
+(defun format-outcome (depth name outcome &optional (output-stream *test-output-stream*))
+    (format output-stream "~&~ATest `~A` ~:[failed~;passed~].~%" (make-spaces depth) name outcome))
+
+(defun format-context (depth name &optional (output-stream *test-output-stream*))
+    (format output-stream "~&~A~A~%" (make-spaces depth) name))
+
+(defun format-outcomes (outcomes &optional (output-stream *test-output-stream*))
+    (format output-stream "~&~A out of ~A tests passed~%" (count t outcomes) (length outcomes)))
+
+(defmacro test (name predicate)
+    (let ((outcome (gensym)))
+        `(lambda (depth)
+            (let ((,outcome ,predicate))
+                (format-outcome depth ,name ,outcome) (list ,outcome)))))
+
+(defmacro context (name &rest body)
+    `(lambda (depth)
+        (format-context depth ,name)
+        (let ((depth (+ depth 1)))
+           (reduce #'append (map 'list #'(lambda (f) (apply f `(,depth))) (list ,@body))))))
+
+(defun run (root-context)
+    (format-outcomes (apply root-context `(,0))))
 
 (defmacro run-tests (&rest body)
-        `(context "" ,@body))
+    `(run (context "" ,@body)))
 
 (defmacro make-test (name predicate)
     `(test ,name ,predicate))
