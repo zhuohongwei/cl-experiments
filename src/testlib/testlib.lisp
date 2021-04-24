@@ -45,4 +45,4 @@
         (make-test "NIL" nil)
         (make-test "t" t)))
 
-(test-testlib)
+;;(test-testlib)
