@@ -42,7 +42,7 @@
 (defun format-csv (input-stream &optional (output-stream t))
     (format-rows (get-rows (get-lines input-stream)) output-stream))
     
-(run (context "csv parser" 
+(run (context "csv-parser" 
         (context "get-lines" 
             (test "it should return the correct lines from input stream" 
                 (equal 

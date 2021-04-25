@@ -38,7 +38,7 @@
 
 (use-package :testlib)
 
-(run (context "who is in space?"
+(run (context "astros"
         (context "people-p"
             (context "when key is people" 
                 (test "it should return true" (people-p (cons :people '()))))

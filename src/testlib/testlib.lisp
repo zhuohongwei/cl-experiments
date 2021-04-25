@@ -9,7 +9,7 @@
     (make-string n :initial-element #\space))
 
 (defun format-outcome (depth name outcome &optional (output-stream *test-output-stream*))
-    (format output-stream "~&~ATest `~A` ~:[failed~;passed~].~%" (make-spaces depth) name outcome))
+    (format output-stream "~&~A~A: ~:[failed~;passed~]~%" (make-spaces depth) name outcome))
 
 (defun format-context (depth name &optional (output-stream *test-output-stream*))
     (format output-stream "~&~A~A~%" (make-spaces depth) name))
@@ -31,18 +31,19 @@
 
 (defun run (root-context)
     (format-outcomes (apply root-context `(,0))))
-
-(defmacro run-tests (&rest body)
-    `(run (context "" ,@body)))
-
-(defmacro make-test (name predicate)
-    `(test ,name ,predicate))
   
 (defun test-testlib ()
-    (run-tests
-        (make-test "1 == 1" (= 1 1))
-        (make-test "2 == 1" (= 2 1))
-        (make-test "NIL" nil)
-        (make-test "t" t)))
+    (run (context "testlib"
+            (context "make-spaces"
+                (test "it should return expected string" (string= (make-spaces 5) "     ")))
+            (context "format-outcome"
+                (context "when outcome is true"
+                    (test "it should return expected format" (string= (format-outcome 2 "foo bar" t nil) (format nil "~&  foo bar: passed~%"))))
+                (context "when outcome is false"
+                    (test "it should return expected format" (string= (format-outcome 2 "foo bar" nil nil) (format nil "~&  foo bar: failed~%")))))
+            (context "format-context"
+                (test "it should return expected format" (string= (format-context 1 "bar baz" nil) (format nil "~& bar baz~%"))))
+            (context "format-outcomes"
+                (test "it should return expected format" (string= (format-outcomes (list t nil) nil) (format nil "~&1 out of 2 tests passed~%")))))))
 
-;;(test-testlib)
+(test-testlib)
