@@ -46,4 +46,4 @@
             (context "format-outcomes"
                 (test "it should return expected format" (string= (format-outcomes (list t nil) nil) (format nil "~&1 out of 2 tests passed~%")))))))
 
-(test-testlib)
+;; (test-testlib)
