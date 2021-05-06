@@ -22,8 +22,6 @@
     (or (json-object-p json) (json-array-p json)))
 
 (defun get-json-value (keys json)
-    (princ (list keys json))
-    (terpri)
     (cond 
         ((null keys) json)
         ((json-p json)
