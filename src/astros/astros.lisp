@@ -1,8 +1,10 @@
 
 (ql:quickload :testlib)
 (ql:quickload :json-helpers)
-(ql:quickload :drakma)
-(ql:quickload :cl-json)
+(ql:quickload :rest-helpers)
+
+(use-package :json-helpers)
+(use-package :rest-helpers)
 
 (defmacro get-property-value (object property-name)
     `(if (listp ,object)
@@ -17,18 +19,12 @@
 (defun format-astronaut (astronaut &optional (output-stream t))
     (format output-stream "~&~A (~A)~%" (get-name astronaut) (get-craft astronaut)))
 
-(catch 'trap-errors 
-    (handler-bind (
-        (error #'(lambda (condition) 
-                    (format *error-output* "~&~A~%" condition)
-                    (throw 'trap-errors nil))))
-        (multiple-value-bind 
-            (data http-response-code) 
-            (drakma:http-request "http://api.open-notify.org/astros.json")
-                (if (= 200 http-response-code) 
-                    (let* ((str (flexi-streams:octets-to-string data))
-                           (json (json:decode-json-from-string str)))
-                             (mapcar #'format-astronaut (json-helpers:get-json-value `(:people) json)))))))
+(defun get-astronauts ()
+    (mapcar #'format-astronaut 
+        (get-json-value `(:people) 
+        (get-json "http://api.open-notify.org/astros.json"))))
+
+(get-astronauts)
 
 (use-package :testlib)
 
